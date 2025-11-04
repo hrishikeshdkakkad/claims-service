@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+wheels/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+claim_process.db
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# Docker
+*.pid
+
+# Temporary files
+*.tmp
+*.bak
+*_api.json

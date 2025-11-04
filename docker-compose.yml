@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: claim_process_db
+    environment:
+      POSTGRES_DB: claims_db
+      POSTGRES_USER: claims_user
+      POSTGRES_PASSWORD: claims_password
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U claims_user -d claims_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - claim_network
+
+  claim_process:
+    build: .
+    container_name: claim_process_app
+    environment:
+      DATABASE_URL: postgresql://claims_user:claims_password@postgres:5432/claims_db
+      SQL_ECHO: "false"
+      DB_POOL_SIZE: "20"
+      DB_MAX_OVERFLOW: "40"
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - claim_network
+    restart: unless-stopped
+    volumes:
+      - ../claim_1234.csv:/app/claim_1234.csv:ro  # Mount sample data from repo root
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  claim_network:
+    driver: bridge

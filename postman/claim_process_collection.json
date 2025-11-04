@@ -1,0 +1,122 @@
+{
+  "info": {
+    "_postman_id": "7e6b5c9d-8ad2-4c5b-9a44-claim-process",
+    "name": "Claim Processing API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Claim (clean payload)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const resp = pm.response.json();",
+              "pm.collectionVariables.set('claim_id', resp.claim_id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"external_claim_id\": \"test_123\",\n  \"lines\": [\n    {\n      \"service_date\": \"2018-03-28\",\n      \"submitted_procedure\": \"D0180\",\n      \"quadrant\": null,\n      \"plan_group_number\": \"GRP-1000\",\n      \"subscriber_number\": \"3730189502\",\n      \"provider_npi\": \"1497775530\",\n      \"provider_fees\": \"100.00\",\n      \"allowed_fees\": \"100.00\",\n      \"member_coinsurance\": \"0.00\",\n      \"member_copay\": \"0.00\"\n    },\n    {\n      \"service_date\": \"2018-03-28\",\n      \"submitted_procedure\": \"D4346\",\n      \"quadrant\": null,\n      \"plan_group_number\": \"GRP-1000\",\n      \"subscriber_number\": \"3730189502\",\n      \"provider_npi\": \"1497775530\",\n      \"provider_fees\": \"130.00\",\n      \"allowed_fees\": \"65.00\",\n      \"member_coinsurance\": \"16.25\",\n      \"member_copay\": \"0.00\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/claims",
+          "host": ["{{baseUrl}}"],
+          "path": ["claims"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Claim (messy payload)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"external_claim_id\": \"messy_123\",\n  \"lines\": [\n    {\n      \"Service Date\": \"3/28/18 0:00\",\n      \"submitted procedure\": \"d0180\",\n      \"Plan/Group #\": \"GRP-1000\",\n      \"Subscriber#\": \"3730189502\",\n      \"Provider NPI\": \"1497775530\",\n      \"provider fees\": \"$100.00 \",\n      \"Allowed fees\": \"$100.00\",\n      \"member coinsurance\": \"$0.00\",\n      \"member copay\": \"$0.00\"\n    },\n    {\n      \"service date\": \"2018-03-28\",\n      \"Submitted Procedure\": \"D4346\",\n      \"Quadrant\": null,\n      \"plan/group #\": \"GRP-1000\",\n      \"subscriber#\": \"3730189502\",\n      \"provider npi\": \"1497775530\",\n      \"PROVIDER FEES\": \"$130.00\",\n      \"allowed_fees\": \"$65.00\",\n      \"Member Coinsurance\": \"16.25\",\n      \"Member Copay\": \"0.00\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/claims",
+          "host": ["{{baseUrl}}"],
+          "path": ["claims"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Claim by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/claims/{{claim_id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["claims", "{{claim_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Top Providers (limit=3)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/top-providers?limit=3",
+          "host": ["{{baseUrl}}"],
+          "path": ["top-providers"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:18100"
+    },
+    {
+      "key": "claim_id",
+      "value": ""
+    }
+  ]
+}
+
