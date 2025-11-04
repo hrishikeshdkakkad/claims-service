@@ -38,6 +38,7 @@ COPY --from=builder /app/src ./src
 COPY alembic.ini .
 COPY README.md .
 COPY alembic ./alembic
+COPY claim_1234.csv .
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH"

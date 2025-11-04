@@ -37,7 +37,7 @@ services:
       - claim_network
     restart: unless-stopped
     volumes:
-      - ../claim_1234.csv:/app/claim_1234.csv:ro  # Mount sample data from repo root
+      - ./claim_1234.csv:/app/claim_1234.csv:ro  # Mount sample data from claim_process directory
 
 volumes:
   postgres_data:
