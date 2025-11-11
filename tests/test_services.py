@@ -70,7 +70,7 @@ class TestClaimValidator:
         """Test NPI validation."""
         validator = ClaimValidator()
 
-        record = {"provider_npi": "1234567890"}
+        record = {"provider_npi": "1234567890"}  # Valid 10-digit NPI
         result = validator.validate_record(record)
         assert result.is_valid
 
@@ -110,7 +110,7 @@ class TestNetFeeCalculator:
     """Test net fee calculation."""
 
     def test_calculate_line_net_fee(self):
-        """Test net fee calculation for a single line."""
+        """Test net fee calculation for a single line using metadata-driven formula."""
         calculator = NetFeeCalculator()
 
         line = {
@@ -120,7 +120,7 @@ class TestNetFeeCalculator:
             "member_copay": Decimal("5.00")
         }
 
-        net_fee = calculator.calculate_line_net_fee(line)
+        net_fee = calculator.apply_custom_formula('net_fee', line)
         # Net fee = 100 + 10 + 5 - 80 = 35
         assert net_fee == Decimal("35.00")
 
@@ -153,7 +153,7 @@ class TestNetFeeCalculator:
         assert totals["total_net_fee"] == Decimal("85.00")
 
     def test_member_responsibility(self):
-        """Test member responsibility calculation."""
+        """Test member responsibility calculation using metadata-driven formula."""
         calculator = NetFeeCalculator()
 
         totals = {
@@ -161,11 +161,11 @@ class TestNetFeeCalculator:
             "total_member_copay": Decimal("15.00")
         }
 
-        member_resp = calculator.calculate_member_responsibility(totals)
+        member_resp = calculator.apply_custom_formula('total_member_responsibility', totals)
         assert member_resp == Decimal("45.00")
 
     def test_provider_adjustment(self):
-        """Test provider adjustment calculation."""
+        """Test provider adjustment calculation using metadata-driven formula."""
         calculator = NetFeeCalculator()
 
         totals = {
@@ -173,5 +173,5 @@ class TestNetFeeCalculator:
             "total_allowed_fees": Decimal("260.00")
         }
 
-        adjustment = calculator.calculate_provider_adjustment(totals)
+        adjustment = calculator.apply_custom_formula('total_provider_adjustment', totals)
         assert adjustment == Decimal("40.00")

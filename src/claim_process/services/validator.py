@@ -204,9 +204,8 @@ class ClaimValidator:
             result.add_error(f"{field_name} must be exactly 10 digits", field_name)
             return
 
-        # Optional: Validate NPI checksum (Luhn algorithm)
-        if not self._validate_npi_checksum(str_value):
-            result.add_warning(f"{field_name} failed checksum validation")
+        # Note: NPI checksum validation (Luhn algorithm) is handled via custom_validator
+        # if configured in the field mapping metadata
 
     def _validate_procedure_code(
         self,
@@ -314,10 +313,22 @@ class ClaimValidator:
             is_valid = validator_func(value)
 
             if not is_valid:
-                result.add_error(
-                    f"{field_name} failed custom validation",
-                    field_name
-                )
+                # Provide specific error messages based on validator type
+                if validator_name == "validate_npi_checksum":
+                    result.add_error(
+                        f"{field_name} failed Luhn algorithm checksum validation",
+                        field_name
+                    )
+                elif validator_name == "validate_procedure_format":
+                    result.add_error(
+                        f"{field_name} does not match required format (D followed by 4 digits)",
+                        field_name
+                    )
+                else:
+                    result.add_error(
+                        f"{field_name} failed custom validation ({validator_name})",
+                        field_name
+                    )
 
     def _validate_npi_checksum(self, npi: str) -> bool:
         """

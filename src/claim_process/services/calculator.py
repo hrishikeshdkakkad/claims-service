@@ -36,46 +36,9 @@ class NetFeeCalculator:
         """
         self.formulas = formulas or CALCULATION_FORMULAS
 
-    def calculate_line_net_fee(self, line: Dict[str, Any]) -> Decimal:
-        """
-        Calculate net fee for a single claim line.
-
-        Args:
-            line: Normalized claim line
-
-        Returns:
-            Calculated net fee
-
-        Raises:
-            CalculationError: If required fields are missing
-        """
-        formula = self.formulas.get('net_fee')
-        if not formula:
-            raise CalculationError("Net fee formula not configured")
-
-        # Extract required fields
-        try:
-            provider_fees = self._to_decimal(line.get('provider_fees', 0))
-            member_coinsurance = self._to_decimal(line.get('member_coinsurance', 0))
-            member_copay = self._to_decimal(line.get('member_copay', 0))
-            allowed_fees = self._to_decimal(line.get('allowed_fees', 0))
-        except Exception as e:
-            raise CalculationError(f"Invalid numeric value: {e}")
-
-        # Apply formula: provider_fees + member_coinsurance + member_copay - allowed_fees
-        net_fee = provider_fees + member_coinsurance + member_copay - allowed_fees
-
-        logger.debug(
-            f"Calculated net fee: {net_fee} "
-            f"(provider: {provider_fees}, coinsurance: {member_coinsurance}, "
-            f"copay: {member_copay}, allowed: {allowed_fees})"
-        )
-
-        return net_fee
-
     def calculate_claim_totals(self, lines: List[Dict[str, Any]]) -> Dict[str, Decimal]:
         """
-        Calculate all totals for a claim.
+        Calculate all totals for a claim using metadata-driven formulas.
 
         Args:
             lines: List of normalized claim lines
@@ -93,65 +56,28 @@ class NetFeeCalculator:
         }
 
         for line in lines:
-            # Calculate line-level net fee
-            line_net_fee = self.calculate_line_net_fee(line)
+            # Calculate line-level net fee using metadata-driven formula
+            line_net_fee = self.apply_custom_formula('net_fee', line)
             totals['line_net_fees'].append(line_net_fee)
 
             # Aggregate totals
-            totals['total_provider_fees'] += self._to_decimal(
-                line.get('provider_fees', 0)
-            )
-            totals['total_allowed_fees'] += self._to_decimal(
-                line.get('allowed_fees', 0)
-            )
-            totals['total_member_coinsurance'] += self._to_decimal(
-                line.get('member_coinsurance', 0)
-            )
-            totals['total_member_copay'] += self._to_decimal(
-                line.get('member_copay', 0)
-            )
+            totals['total_provider_fees'] += self._to_decimal(line.get('provider_fees', 0))
+            totals['total_allowed_fees'] += self._to_decimal(line.get('allowed_fees', 0))
+            totals['total_member_coinsurance'] += self._to_decimal(line.get('member_coinsurance', 0))
+            totals['total_member_copay'] += self._to_decimal(line.get('member_copay', 0))
             totals['total_net_fee'] += line_net_fee
 
-        # Calculate additional metrics
-        totals['member_responsibility'] = self.calculate_member_responsibility(totals)
-        totals['provider_adjustment'] = self.calculate_provider_adjustment(totals)
+            logger.debug(
+                f"Line {len(totals['line_net_fees'])}: net_fee={line_net_fee} "
+                f"(fees={line.get('provider_fees')}, allowed={line.get('allowed_fees')})"
+            )
+
+        # Calculate claim-level metrics using metadata-driven formulas
+        totals['member_responsibility'] = self.apply_custom_formula('total_member_responsibility', totals)
+        totals['provider_adjustment'] = self.apply_custom_formula('total_provider_adjustment', totals)
         totals['average_net_fee'] = self._calculate_average(totals['line_net_fees'])
 
         return totals
-
-    def calculate_member_responsibility(self, totals: Dict[str, Decimal]) -> Decimal:
-        """
-        Calculate total member responsibility.
-
-        Args:
-            totals: Dictionary with claim totals
-
-        Returns:
-            Total amount member owes
-        """
-        formula = self.formulas.get('member_responsibility')
-        if not formula:
-            # Default calculation if formula not configured
-            return totals['total_member_coinsurance'] + totals['total_member_copay']
-
-        return totals['total_member_coinsurance'] + totals['total_member_copay']
-
-    def calculate_provider_adjustment(self, totals: Dict[str, Decimal]) -> Decimal:
-        """
-        Calculate provider adjustment (write-off amount).
-
-        Args:
-            totals: Dictionary with claim totals
-
-        Returns:
-            Provider adjustment amount
-        """
-        formula = self.formulas.get('provider_adjustment')
-        if not formula:
-            # Default calculation if formula not configured
-            return totals['total_provider_fees'] - totals['total_allowed_fees']
-
-        return totals['total_provider_fees'] - totals['total_allowed_fees']
 
     def apply_custom_formula(
         self,

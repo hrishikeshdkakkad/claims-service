@@ -65,8 +65,8 @@ FIELD_MAPPINGS: Dict[str, FieldMapping] = {
         validation=ValidationRule(
             field_type=FieldType.PROCEDURE_CODE,
             required=True,
-            starts_with="D",  # Dental codes start with D
-            pattern=r"^D\d{4}$"  # D followed by 4 digits
+            starts_with="D",
+            pattern=r"^D\d{4}$"  # Pattern validation covers format check
         ),
         description="Procedure code submitted for the claim"
     ),
@@ -156,23 +156,38 @@ FIELD_MAPPINGS: Dict[str, FieldMapping] = {
 
 # Calculation formulas as metadata
 CALCULATION_FORMULAS: Dict[str, CalculationFormula] = {
+    # Line-level formulas (for individual claim lines)
     "net_fee": CalculationFormula(
         name="net_fee",
         formula="provider_fees + member_coinsurance + member_copay - allowed_fees",
         fields_required=["provider_fees", "member_coinsurance", "member_copay", "allowed_fees"],
-        description="Net fee calculation for claim processing"
+        description="Net fee calculation for claim line"
     ),
     "member_responsibility": CalculationFormula(
         name="member_responsibility",
         formula="member_coinsurance + member_copay",
         fields_required=["member_coinsurance", "member_copay"],
-        description="Total amount member owes"
+        description="Member responsibility for claim line"
     ),
     "provider_adjustment": CalculationFormula(
         name="provider_adjustment",
         formula="provider_fees - allowed_fees",
         fields_required=["provider_fees", "allowed_fees"],
-        description="Provider write-off amount"
+        description="Provider write-off amount for claim line"
+    ),
+
+    # Claim-level aggregate formulas (for totals across all lines)
+    "total_member_responsibility": CalculationFormula(
+        name="total_member_responsibility",
+        formula="total_member_coinsurance + total_member_copay",
+        fields_required=["total_member_coinsurance", "total_member_copay"],
+        description="Total member responsibility across all claim lines"
+    ),
+    "total_provider_adjustment": CalculationFormula(
+        name="total_provider_adjustment",
+        formula="total_provider_fees - total_allowed_fees",
+        fields_required=["total_provider_fees", "total_allowed_fees"],
+        description="Total provider write-off amount across all claim lines"
     )
 }
 
